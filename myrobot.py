@@ -193,7 +193,33 @@ async def a_hist(req):
 
 async def a_index(req): return web.Response(text=HTML,content_type="text/html")
 
-@dp.message(CommandStart())
+dp.pre_checkout_query()
+async def on_pre_checkout(q: PreCheckoutQuery):
+    await q.answer(ok=True)
+
+@dp.message(F.successful_payment)
+async def on_payment(m: Message):
+    try:
+        p = json.loads(m.successful_payment.invoice_payload)
+        uid = p["u"]; days = p["d"]
+    except Exception:
+        return
+    now = datetime.utcnow()
+    with db() as c:
+        r = c.execute("SELECT subscription_until FROM users WHERE user_id=?", (uid,)).fetchone()
+        base = now
+        if r and r["subscription_until"]:
+            try: base = max(datetime.fromisoformat(r["subscription_until"]), now)
+            except: pass
+        until = (base + timedelta(days=days)).isoformat()
+        c.execute("UPDATE users SET subscription_until=? WHERE user_id=?", (until, uid))
+        c.execute("INSERT INTO purchases(user_id,title,amount,status,created_at) VALUES(?,?,?,?,?)",
+                  (uid, f"VPN {days} дн.", m.successful_payment.total_amount, "success", now.isoformat()))
+    await m.answer(f"✅ Оплата получена! Подписка активна до {until[:10]}")
+
+
+
+
 async def start(m:Message):
     a=m.text.split(maxsplit=1); ref=None
     if len(a)>1 and a[1].startswith("ref_"):
@@ -209,7 +235,7 @@ async def main():
     app.router.add_get("/",a_index)
     app.router.add_get("/api/me",a_me)
     app.router.add_get("/api/plans",a_plans)
-    app.router.add_post("/api/purchase",a_buy)
+    app.router.add_post("/api/buy", a_invoice)
     app.router.add_get("/api/history",a_hist)
     runner=web.AppRunner(app); await runner.setup()
     await web.TCPSite(runner,"0.0.0.0",PORT).start()
