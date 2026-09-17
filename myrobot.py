@@ -1,7 +1,7 @@
 import asyncio, hashlib, hmac, json, os, sqlite3
 from datetime import datetime, timedelta
 from urllib.parse import parse_qsl
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, F
 from aiogram.filters import CommandStart
 from aiogram.types import (Message, InlineKeyboardMarkup, InlineKeyboardButton,
                            WebAppInfo, MenuButtonWebApp)
