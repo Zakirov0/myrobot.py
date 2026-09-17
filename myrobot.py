@@ -103,7 +103,13 @@ function refs(){C.innerHTML=`<div class="st">Реферальная програ
 <div class="sts" style="margin-top:16px"><div class="stt"><div class="si">👥</div><div class="sl">Приглашено</div><div class="sv">${me.referrals_count}</div></div>
 <div class="stt"><div class="si">💎</div><div class="sl">Заработано</div><div class="sv">${me.referrals_earned} ₽</div></div></div></div>
 <button class="btn" onclick="sh()">📤 Поделиться</button>`}
-async function buy(id){try{const r=await api("/api/purchase",{method:"POST",body:JSON.stringify({plan_id:id})});if(r.ok){toast("Подписка продлена ✅");await rl();tab("home")}}catch(e){toast("Ошибка")}}
+async function buy(id){try{tg?.HapticFeedback?.impactOccurred("medium");
+const r=await api("/api/buy",{method:"POST",body:JSON.stringify({plan_id:id})});
+if(!r.ok||!r.link){toast("Ошибка");return}
+tg.openInvoice(r.link,async(s)=>{if(s==="paid"){toast("Оплачено ✅");
+tg?.HapticFeedback?.notificationOccurred("success");await rl();tab("home")}
+else if(s==="cancelled"){toast("Отменено")}else{toast("Ошибка оплаты")}})
+}catch(e){toast("Ошибка: "+e.message)}}
 function cp(){navigator.clipboard.writeText(document.getElementById("rl").textContent);toast("Скопировано")}
 function sh(){tg?.openTelegramLink?.(`https://t.me/share/url?url=${encodeURIComponent(me.ref_link)}&text=Залетай!`)}
 function tab(t){document.querySelectorAll(".nb").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
