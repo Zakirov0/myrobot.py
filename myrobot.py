@@ -151,8 +151,22 @@ async def a_me(req):
     with db() as c: cnt=c.execute("SELECT COUNT(*) c FROM users WHERE referred_by=?",(uid,)).fetchone()["c"]
     bi=await bot.me()
     return web.json_response({"user_id":uid,"first_name":row["first_name"],"username":row["username"],"balance":row["balance"],"subscription_until":row["subscription_until"],"referrals_count":cnt,"referrals_earned":cnt*50,"ref_link":f"https://t.me/{bi.username}?start=ref_{uid}"})
-
 async def a_plans(req): return web.json_response([{"id":"1m","title":"1 месяц","price":299,"old":399,"days":30,"hit":False},{"id":"3m","title":"3 месяца","price":749,"old":1197,"days":90,"hit":True},{"id":"12m","title":"12 месяцев","price":2490,"old":4788,"days":365,"hit":False}])
+async def a_invoice(req):
+    u = auth(req)
+    if not u: return web.json_response({"error":"unauth"}, status=401)
+    b = await req.json()
+    plan = b.get("plan_id")
+    if plan not in PRICES: return web.json_response({"error":"bad"}, status=400)
+    stars, days = PRICES[plan]
+    payload = json.dumps({"u": u["id"], "d": days})
+    link = await bot.create_invoice_link(
+        title="Подписка SARVPN",
+        description=f"VPN на {days} дней",
+        payload=payload,
+        currency="XTR",
+        prices=[LabeledPrice(label=f"VPN {days} дн.", amount=stars)])
+    return web.json_response({"ok": True, "link": link})
 
 async def a_buy(req):
     u=auth(req)
