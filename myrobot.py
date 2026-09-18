@@ -200,7 +200,7 @@ async def a_hist(req):
 async def a_index(req): return web.Response(text=HTML,content_type="text/html")
 
 dp.pre_checkout_query()
-async def on_pre_checkout(q: PreCheckoutQuery):
+async def on_pre_checkout(q):
     await q.answer(ok=True)
 
 @dp.message(F.successful_payment)
