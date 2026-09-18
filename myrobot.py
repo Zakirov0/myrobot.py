@@ -4,7 +4,7 @@ from urllib.parse import parse_qsl
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import CommandStart
 from aiogram.types import (Message, InlineKeyboardMarkup, InlineKeyboardButton,
-                           WebAppInfo, MenuButtonWebApp)
+                           WebAppInfo, LabeledPrice, PreCheckoutQuery, MenuButtonWebApp)
 from aiohttp import web
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
